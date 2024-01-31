@@ -1,6 +1,128 @@
 # bypass the planner entirely and directly publish to the topic controls-force-blah-blah and PID topics
 # LOOK at rosjoy and jstest packages
 
+import keyboard 
+import rospy
+from sensor_msgs.msg import Joy
+
+class Controller:
+    # get keyboard inputs
+    # def __init__(self):
+        # self.joy = Joy()
+        # self.joy.axes = [0, 0, 0, 0, 0, 0, 0, 0]
+        # self.joy.buttons = [0, 0, 0, 0, 0, 0, 0, 0]
+        # self.joy_pub = rospy.Publisher('/joy', Joy, queue_size=10)
+        # self.rate = rospy.Rate(10)
+
+    def execute(self):
+        while not rospy.is_shutdown():
+            # self.joy_pub.publish(self.joy)
+            # self.rate.sleep()
+
+            if keyboard.is_pressed('w'):
+                self.joy.axes[1] = 1
+                # positive surge 
+            elif keyboard.is_pressed('s'):
+                self.joy.axes[1] = -1
+                # negative surge
+            else:
+                self.joy.axes[1] = 0
+
+            if keyboard.is_pressed('a'):
+                self.joy.axes[0] = 1
+                # positive sway
+            elif keyboard.is_pressed('d'):
+                self.joy.axes[0] = -1
+                # negative sway
+            else:
+                self.joy.axes[0] = 0
+            
+            if keyboard.is_pressed('q'):
+                self.joy.axes[3] = 1
+                # positive yaw
+            elif keyboard.is_pressed('e'):
+                self.joy.axes[3] = -1
+                # negative yaw
+            else:
+                self.joy.axes[3] = 0
+
+            if keyboard.is_pressed('up'):
+                self.joy.axes[5] = 1
+            elif keyboard.is_pressed('down'):
+                self.joy.axes[5] = -1
+            else:
+                self.joy.axes[5] = 0
+
+            if keyboard.is_pressed('left'):
+                self.joy.axes[4] = 1
+            elif keyboard.is_pressed('right'):
+                self.joy.axes[4] = -1
+            else:
+                self.joy.axes[4] = 0
+
+            if keyboard.is_pressed('space'):
+                self.joy.buttons[0] = 1
+                # global z up
+            else:
+                self.joy.buttons[0] = 0
+                
+            if keyboard.is_pressed('shift'):
+                self.joy.buttons[1] = 1
+                # global z down
+            else:
+                self.joy.buttons[1] = 0
+
+            if keyboard.is_pressed('ctrl'):
+                self.joy.buttons[2] = 1
+            else:
+                self.joy.buttons[2] = 0
+            if keyboard.is_pressed('z'):
+                self.joy.buttons[3] = 1
+            else:
+                self.joy.buttons[3] = 0
+            if keyboard.is_pressed('x'):
+                self.joy.buttons[4] = 1
+            else:
+                self.joy.buttons[4] = 0
+            if keyboard.is_pressed('c'):
+                self.joy.buttons[5] = 1
+            else:
+                self.joy.buttons[5] = 0
+            if keyboard.is_pressed('v'):
+                self.joy.buttons[6] = 1
+            else:
+                self.joy.buttons[6] = 0
+            if keyboard.is_pressed('b'):
+                self.joy.buttons[7] = 1
+            else:
+                self.joy.buttons[7] = 0
+
+            # if we want to implement heave could we do the same thin
+            # as we are doing with surge and other sway (might need to 
+            # deactivate all position pid loops when moving then) maybe
+            # could set a default thruster value of the value of the 
+            # pid when it was shut off or could constalty update the 
+            # goal of z pid to be current z when moving (some way of 
+            # stopping the bot from just dropping to the bottom when 
+            # moving with this system) 
+                
+            if self.joy.axes[0] == 0 and self.joy.axes[1] == 0:
+                self.joy.axes[0] = 0
+                self.joy.axes[1] = 0
+                # run pid loop to make bot stay in position
+            
+            if self.joy.axes[3] == 0:
+                self.joy.axes[3] = 0
+                # run pid loop to make bot stay in rotation
+
+                
+if __name__ == "__main__":
+    rospy.init_node("controller")
+    controller = Controller()
+    controller.execute()
+    rospy.spin()
+
+
 # TOPIC NAMES: 
 # 1. self.surge = Superimposer.Degree_Of_Freedom('/controls/force/surge')
 # self.sway = Superimposer.Degree_Of_Freedom('/controls/force/sway')
