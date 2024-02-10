@@ -111,9 +111,12 @@ class State:
     def resume(self):
         self.paused = False
 
-# bbox is an array of 4 elements
-#given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
+
 def visualizeBbox(img, bbox, class_name, thickness=2, fontSize=0.5):
+    """ 
+        Given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
+        Note: bbox is an array of 4 elements
+     """
     #get xmin, xmax, ymin, ymax from bbox 
     x_center, y_center, w, h = bbox
     x_min = x_center - w/2
@@ -186,8 +189,8 @@ def measureLaneMarker(img, bbox, debug_img):
     cv2.circle(debug_img, center_point, radius=5, color=HEADING_COLOR, thickness=-1)
     return headings, center_point, debug_img
 
-# given a vector relative to the auv, turns local measurements to global
 def transformLocalToGlobal(lx,ly,lz,camera_id,yaw_offset=0):
+    """ Given a vector relative to the auv, turns local measurements to global """
     rotation_offset = transformations.quaternion_from_euler(0, 0, yaw_offset)
     rotation = states[camera_id].q_auv * np.quaternion(rotation_offset[3], rotation_offset[0], rotation_offset[1], rotation_offset[2])
     return quaternion.rotate_vectors(rotation, np.array([lx,ly,lz])) + np.array([states[camera_id].x, states[camera_id].y, states[camera_id].z])
@@ -290,7 +293,6 @@ def measureAngle(bbox):
     slope, _ = np.polyfit(filtered_point_cloud_x, filtered_point_cloud_y, 1) # Fit a line to the point cloud on x/y
 
     angle = -math.degrees(math.atan(slope)) # Calculate the angle of the fitted line
-    
     return angle
 
 # does what its supposed to, gate isnt in right position
