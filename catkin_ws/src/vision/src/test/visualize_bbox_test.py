@@ -6,14 +6,14 @@ import unittest
 import numpy as np
 from object_detection_utils import transformLocalToGlobal
 
-@TODO - Record img data, bbox data, 
+# @TODO - Record img data, bbox data 
 class visualize_bbox_test(unittest.TestCase):
     """ 
         Given an image, class name, and a bounding box, draws the bounding box rectangle and label name onto the image
         params: img, bbox, class_name, thickness, fontSize
     """
     def test__Vector1(self):
-        
+        pass
         
 
 if __name__ == '__main__':

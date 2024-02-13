@@ -6,8 +6,8 @@ import unittest
 import numpy as np
 from object_detection_utils import measure_angle
 
-@TODO - Record bounding box data
-@TODO - Initialize the bounding box variable from the recorded data
+# @TODO - Record bounding box data
+# @TODO - Initialize the bounding box variable from the recorded data
 class measure_angle_test(unittest.TestCase):
     """ Given a bounding box, returns the angle of the object in degrees (only for front cam) """
     def __init__(self):

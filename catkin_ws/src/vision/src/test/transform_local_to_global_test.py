@@ -6,7 +6,7 @@ import unittest
 import numpy as np
 from object_detection_utils import transformLocalToGlobal
 
-@TODO - Come up with some examples + calculate the expected results by hand
+# @TODO: Come up with some examples + calculate the expected results by hand
 class transform_local_to_global(unittest.TestCase):
     """ 
         Given a vector relative to the auv, turns local measurements to global
