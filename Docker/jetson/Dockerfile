@@ -39,8 +39,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-noetic-ros-base=1.5.0-1* \
     && rm -rf /var/lib/apt/lists/*
 
-ENV IGNITION_VERSION=fortress
-
 # Install all needed deps and compile the mesa llvmpipe driver from source.
 RUN sudo apt-get update \
     && apt-get install -y software-properties-common \
@@ -62,17 +60,6 @@ RUN apt-get install -y ros-noetic-rosserial-arduino \
     ros-noetic-image-view \
     ros-noetic-rqt-gui \
     ros-noetic-smach-ros
-
-RUN sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends ignition-fortress \
-    && apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
-    && apt-get update \
-    && apt-get install -y ros-noetic-gazebo-ros git libgflags-dev libignition-gazebo3-dev\
-    && sudo apt-get autoremove -y  \
-    && sudo apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc 
 
 COPY requirements.txt requirements.txt
 
@@ -96,3 +83,24 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     cd ../ && \
     rm -rf torchvision \
     && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc 
+
+ARG UBUNTU_RELEASE_YEAR
+ARG CUDA_MAJOR
+ARG CUDA_MINOR
+ARG ZED_SDK_MAJOR
+ARG ZED_SDK_MINOR
+
+# NVIDIA_DRIVER_CAPABILITIES controls which driver libraries/binaries will be mounted inside the container.
+# The possible values of the NVIDIA_DRIVER_CAPABILITIES variable are: compute,video or graphics,utility
+ENV NVIDIA_DRIVER_CAPABILITIES \
+    ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}compute,video,utility
+    
+# Setup the ZED SDK
+RUN apt-get update -y || true ; apt-get install --no-install-recommends lsb-release wget less udev sudo zstd build-essential cmake python3 python3-pip libpng-dev libgomp1 -y ; \
+    #python3 -m pip install --upgrade pip ; \
+    python3 -m pip install numpy opencv-python ; \
+    wget -q -O ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run https://download.stereolabs.com/zedsdk/${ZED_SDK_MAJOR}.${ZED_SDK_MINOR}/cu${CUDA_MAJOR}${CUDA_MINOR%.*}/ubuntu${UBUNTU_RELEASE_YEAR} && \
+    chmod +x ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run ; ./ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run -- silent skip_tools skip_cuda && \
+    ln -sf /lib/x86_64-linux-gnu/libusb-1.0.so.0 /usr/lib/x86_64-linux-gnu/libusb-1.0.so && \
+    rm ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run && \
+    rm -rf /var/lib/apt/lists/*
