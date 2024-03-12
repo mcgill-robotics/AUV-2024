@@ -13,7 +13,7 @@ services:
     runtime: nvidia
     # devices:
     #   - /dev/auv_imu:/dev/auv_imu
-    # image: "mcgillrobotics/auv_2024:main"
+    image: "mcgillrobotics/auv_2024:jetson"
     command: bash -c "tail -f /dev/null"
     network_mode: host
     restart: always

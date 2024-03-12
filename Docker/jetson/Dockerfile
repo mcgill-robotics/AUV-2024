@@ -84,16 +84,11 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     rm -rf torchvision \
     && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc 
 
-ARG UBUNTU_RELEASE_YEAR
-ARG CUDA_MAJOR
-ARG CUDA_MINOR
-ARG ZED_SDK_MAJOR
-ARG ZED_SDK_MINOR
-
-# NVIDIA_DRIVER_CAPABILITIES controls which driver libraries/binaries will be mounted inside the container.
-# The possible values of the NVIDIA_DRIVER_CAPABILITIES variable are: compute,video or graphics,utility
-ENV NVIDIA_DRIVER_CAPABILITIES \
-    ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}compute,video,utility
+ARG UBUNTU_RELEASE_YEAR=20
+ARG CUDA_MAJOR=11
+ARG CUDA_MINOR=8.0
+ARG ZED_SDK_MAJOR=4
+ARG ZED_SDK_MINOR=0
     
 # Setup the ZED SDK
 RUN apt-get update -y || true ; apt-get install --no-install-recommends lsb-release wget less udev sudo zstd build-essential cmake python3 python3-pip libpng-dev libgomp1 -y ; \
