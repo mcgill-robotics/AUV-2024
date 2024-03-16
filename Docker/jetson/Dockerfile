@@ -64,7 +64,7 @@ RUN apt-get install -y ros-noetic-rosserial-arduino \
 
 COPY requirements.txt requirements.txt
 
-RUN export TORCH_INSTALL=path/to/torch-2.2.0a0+81ea7a4+nv23.12-cp38-cp38-linux_aarch64.whl
+# RUN export TORCH_INSTALL=path/to/torch-2.2.0a0+81ea7a4+nv23.12-cp38-cp38-linux_aarch64.whl
 
 RUN pip install --no-cache-dir -r requirements.txt \
     && pip install --no-deps --no-cache-dir ultralytics==8.0.207 \
@@ -87,20 +87,45 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     rm -rf torchvision \
     && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc 
 
-ARG UBUNTU_RELEASE_YEAR=20
-ARG CUDA_MAJOR=11
-ARG CUDA_MINOR=8.0
-ARG ZED_SDK_MAJOR=4
-ARG ZED_SDK_MINOR=0
+# ARG UBUNTU_RELEASE_YEAR=20
+# ARG CUDA_MAJOR=11
+# ARG CUDA_MINOR=8.0
+
     
-# Setup the ZED SDK
-RUN apt-get update -y || true ; apt-get install --no-install-recommends lsb-release wget less udev sudo zstd build-essential cmake python3 python3-pip libpng-dev libgomp1 -y ; \
-    #python3 -m pip install --upgrade pip ; \
-    python3 -m pip install numpy opencv-python ; \
-    wget -q -O ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run https://download.stereolabs.com/zedsdk/${ZED_SDK_MAJOR}.${ZED_SDK_MINOR}/cu${CUDA_MAJOR}${CUDA_MINOR%.*}/ubuntu${UBUNTU_RELEASE_YEAR} && \
-    chmod +x ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run ; ./ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run -- silent skip_tools skip_cuda && \
-    ln -sf /lib/x86_64-linux-gnu/libusb-1.0.so.0 /usr/lib/x86_64-linux-gnu/libusb-1.0.so && \
-    rm ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run && \
-    rm -rf /var/lib/apt/lists/*
+# # Setup the ZED SDK
+# RUN apt-get update -y || true ; apt-get install --no-install-recommends lsb-release wget less udev sudo zstd build-essential cmake python3 python3-pip libpng-dev libgomp1 -y ; \
+#     #python3 -m pip install --upgrade pip ; \
+#     python3 -m pip install numpy opencv-python ; \
+#     wget -q -O ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run https://download.stereolabs.com/zedsdk/${ZED_SDK_MAJOR}.${ZED_SDK_MINOR}/cu${CUDA_MAJOR}${CUDA_MINOR%.*}/ubuntu${UBUNTU_RELEASE_YEAR} && \
+#     chmod +x ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run ; ./ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run -- silent skip_tools skip_cuda && \
+#     ln -sf /lib/x86_64-linux-gnu/libusb-1.0.so.0 /usr/lib/x86_64-linux-gnu/libusb-1.0.so && \
+#     rm ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run && \
+#     rm -rf /var/lib/apt/lists/*
 
 # docker buildx build . -t  mcgillrobotics/auv_2024:jetson
+# https://github.com/stereolabs/zed-docker/blob/master/dockerhub.md
+# https://github.com/stereolabs/zed-docker/blob/master/4.X/l4t/devel/Dockerfile
+# https://gitlab.com/nvidia/container-images/l4t-jetpack/-/blob/master/Dockerfile.jetpack?ref_type=heads
+
+ARG L4T_MAJOR_VERSION=35
+ARG L4T_MINOR_VERSION=3
+ARG L4T_PATCH_VERSION=1
+
+ARG ZED_SDK_MAJOR=4
+ARG ZED_SDK_MINOR=0
+
+#This environment variable is needed to use the streaming features on Jetson inside a container
+ENV LOGNAME root
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update || true ; apt-get install --no-install-recommends lsb-release wget less udev zstd sudo apt-transport-https build-essential cmake -y&& \
+    echo "# R${L4T_MAJOR_VERSION} (release), REVISION: ${L4T_MINOR_VERSION}.${L4T_PATCH_VERSION}" > /etc/nv_tegra_release ; \
+    wget -q --no-check-certificate -O ZED_SDK_Linux.run https://download.stereolabs.com/zedsdk/${ZED_SDK_MAJOR}.${ZED_SDK_MINOR}/l4t${L4T_MAJOR_VERSION}.${L4T_MINOR_VERSION}/jetsons && \
+    chmod +x ZED_SDK_Linux.run ; ./ZED_SDK_Linux.run silent skip_tools skip_drivers && \
+    rm -rf /usr/local/zed/resources/* \
+    rm -rf ZED_SDK_Linux.run && \
+    rm -rf /var/lib/apt/lists/*
+
+#This symbolic link is needed to use the streaming features on Jetson inside a container
+RUN ln -sf /usr/lib/aarch64-linux-gnu/tegra/libv4l2.so.0 /usr/lib/aarch64-linux-gnu/libv4l2.so
+
+WORKDIR /usr/local/zed
