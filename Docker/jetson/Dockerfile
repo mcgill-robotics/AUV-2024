@@ -1,5 +1,6 @@
 FROM dustynv/pytorch:2.1-r35.3.1
 
+
 # install packages
 RUN apt-get update && apt-get install -q -y --no-install-recommends \
     dirmngr \
@@ -63,6 +64,8 @@ RUN apt-get install -y ros-noetic-rosserial-arduino \
 
 COPY requirements.txt requirements.txt
 
+RUN export TORCH_INSTALL=path/to/torch-2.2.0a0+81ea7a4+nv23.12-cp38-cp38-linux_aarch64.whl
+
 RUN pip install --no-cache-dir -r requirements.txt \
     && pip install --no-deps --no-cache-dir ultralytics==8.0.207 \
     && rm -f /usr/local/bin/cmake && rm -rf /root/.cache/pip && rm requirements.txt 
@@ -99,3 +102,5 @@ RUN apt-get update -y || true ; apt-get install --no-install-recommends lsb-rele
     ln -sf /lib/x86_64-linux-gnu/libusb-1.0.so.0 /usr/lib/x86_64-linux-gnu/libusb-1.0.so && \
     rm ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run && \
     rm -rf /var/lib/apt/lists/*
+
+# docker buildx build . -t  mcgillrobotics/auv_2024:jetson
