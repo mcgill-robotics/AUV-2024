@@ -62,12 +62,18 @@ def camera_info_callback(msg):
     camera_txt.close()
 
 def pose_callback(msg):
-    global gps, depth, seen_pose, backwards, north_offset, east_offset, roll, pitch, yaw
+    global gps, depth, seen_pose, backwards, north_offset, east_offset, roll, pitch, yaw, x, y, z, quat_nwu
     new_north, new_east = north_offset + msg.position.x, east_offset - msg.position.y
     gps = backwards.transform(new_east,  new_north)
     depth = msg.position.z
 
+    x = msg.position.x
+    y = msg.position.y
+    z = msg.position.z
+
+
     quaternion_nwu = np.quaternion(msg.orientation.w,msg.orientation.x,msg.orientation.y,msg.orientation.z)
+    quat_nwu = quaternion_nwu
     quaternion_ned = np.quaternion(0,1,0,0) * quaternion_nwu * np.quaternion(0,1,0,0)
     yaw, pitch, roll = transformations.euler_from_quaternion([quaternion_ned.x,quaternion_ned.y,quaternion_ned.z,quaternion_ned.w],'szyx')
     yaw *= DEG_PER_RAD
@@ -82,26 +88,30 @@ def image_callback(msg):
     seen_image = True
 
 def init_text_file():
-    global output_txt, output_dir, title
-    output_txt = open(output_dir + f'/geo.txt', 'w')
-    output_txt.write("EPSG:4326\n")
+    global geo_txt, output_dir, title, our_format_txt
+    geo_txt = open(output_dir + f'/geo.txt', 'w')
+    geo_txt.write("EPSG:4326\n")
+    our_format_txt = open(output_dir + f'/our_format.txt', 'w')
+    our_format_txt.write("image x y z qw_nwu qx_nwu qy_nwu qz_nwu\n")
 
 def save_data():
-    global gps, depth, image, output_txt, video, roll, pitch, yaw, seen_pose
+    global gps, depth, image, geo_txt, video, roll, pitch, yaw, seen_pose, x, y, z, quat_nwu, our_format_txt
     print(gps,seen_image)
     if seen_pose and seen_image:
         print("saving")
         millis = str(int(round(time.time() * 1000)))[0:3]
         the_time = strftime(f"%H:%M:%S.{millis}")
         title = the_time+".jpg"
-        output_txt.write(f"{title} {gps[0]:10.13f} {gps[1]:10.13f} {depth} {yaw} {pitch} {roll}\n")
+        geo_txt.write(f"{title} {gps[0]:10.13f} {gps[1]:10.13f} {depth} {yaw} {pitch} {roll}\n")
+        our_format_txt.write(f"{title} {x:10.4f} {y:10.4f} {z:10.4f} {quat_nwu.w:10.8f} {quat_nwu.x:10.8f} {quat_nwu.y:10.8f} {quat_nwu.z:10.8f}\n")
         cv2.imwrite(output_dir + "/" + title,image)
 
 
 def shutdown():
-    global output_txt
+    global geo_txt, our_format_txt
     print("shutting down")
-    output_txt.close()
+    geo_txt.close()
+    our_format_txt.close()
 
 if __name__ == '__main__':
     rospy.init_node('data_collection')
@@ -115,6 +125,10 @@ if __name__ == '__main__':
     roll = None
     pitch = None
     yaw = None
+    x = None,
+    y = None,
+    z = None,
+    quat_nwu = None
     title = strftime("%d_%m_%Y_%H:%M:%S")
     bridge = CvBridge()
     laditude_offset = rospy.get_param('~laditude_offset')
