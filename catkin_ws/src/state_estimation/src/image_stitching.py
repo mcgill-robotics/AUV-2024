@@ -1,8 +1,8 @@
 import numpy as np 
-import opencv as cv
+import cv2
 
 
-def process_video():
+def process_video(path):
      pass
 
 def load_images(path):
