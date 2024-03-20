@@ -11,8 +11,10 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
 
     runtime: nvidia
-    # devices:
+    devices:
     #   - /dev/auv_imu:/dev/auv_imu
+      - /dev/auv_front_cam_left:/dev/auv_front_cam_left
+    #   - /dev/auv_front_cam_right:/dev/auv_front_cam_right
     image: "mcgillrobotics/auv_2024:jetson"
     command: bash -c "tail -f /dev/null"
     network_mode: host
