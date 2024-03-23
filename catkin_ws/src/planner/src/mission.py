@@ -15,6 +15,7 @@ from substates.trick import *
 from substates.navigate_gate import *
 from substates.navigate_buoy import *
 from substates.octagon_task import *
+from substates.navigate_pinger import *
 
 
 def endMission(msg):
@@ -33,7 +34,7 @@ def gateMission():
     with sm:
         smach.StateMachine.add('find_gate', InPlaceSearch(timeout=120, target_class="Gate", min_objects=1, control=control, mapping=mapping, search_depth=-2), 
             transitions={'success': 'navigate_gate_go_through', 'failure': 'failure'})
-        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, target_symbol=target_symbol, gate_width=gate_width), 
+        smach.StateMachine.add('navigate_gate_go_through', NavigateGate(control=control, mapping=mapping, state=state, goThrough=True, gate_width=gate_width), 
             transitions={'success': 'success', 'failure':'failure'})
     res = sm.execute()
     # display_mission.updateMission("Gate Task {}".format(res))
@@ -59,7 +60,7 @@ def tricks(t):
     global sm
     sm = smach.StateMachine(outcomes=['success', 'failure']) 
     with sm:
-        smach.StateMachine.add('trick', Trick(control=control, trick_type=t), 
+        smach.StateMachine.add('trick', Trick(control=control, trick_type=t, state=state, num_full_spins=3), 
         transitions={'success': 'success', 'failure':'failure'})
         res = sm.execute()
     # display_mission.updateMission("Tricks {}".format(res))
@@ -78,6 +79,21 @@ def laneMarkerMission():
         res = sm.execute()
     # display_mission.updateMission("Lane Marker {}".format(res))
     endMission("Finished lane marker. Result {}".format(res))
+    
+def pingerMission():
+        pub_mission_display.publish("Pinger")
+        global sm
+        sm = smach.StateMachine(outcomes=['success', 'failure'])
+        with sm:
+                # Turn towards pinger bearing and move towards it until you find an object
+                smach.StateMachine.add('navigate_pinger', GoToPinger(control=control, mapping=mapping, state=state, pinger_num=4), 
+                        transitions={'success': 'success', 'failure':'failure', 'search': 'breadth_first_search'})
+                # TODO [COMP]: Specify target class
+                smach.StateMachine.add('breadth_first_search', BreadthFirstSearch(timeout=120, target_class="", expansionAmt=0.5, min_objects=1, control=control, mapping=mapping, search_depth=-1), 
+                        transitions={'success': 'success', 'failure':'failure'})
+                res = sm.execute()
+        # display_mission.updateMission("Pinger {}".format(res))
+        endMission("Finished pinger. Result {}".format(res))
 
 def semiFinals():
     global sm
@@ -124,10 +140,10 @@ def semiFinals():
 buoy_width = 1.2
 buoy_height = 1.2
 gate_width = 3
-target_symbol = "Earth Symbol" # "Abydos Symbol"
 wait_time_for_comp = 30 # [COMP] make sure this is long enough
 
 if __name__ == '__main__':
+    mission = input("Enter mission to run: ")
     rospy.init_node('mission_planner',log_level=rospy.DEBUG)
     rospy.on_shutdown(endPlanner)
 
@@ -137,25 +153,23 @@ if __name__ == '__main__':
         mapping = ObjectMapper()
         state = StateTracker()
         control = Controller(rospy.Time(0))
+        pinger_num = 1 # [COMP] change this to an integer depending on which pinger is being used
         sm = None
 
+        # Run a planner mission based on the user input 
+        if mission == "tricks":
+             tricks("roll")
+        elif mission == "pinger":
+             pingerMission()
+        elif mission == "laneMarker":
+             laneMarkerMission()
+        elif mission == "buoy":
+             buoyMission()
+        elif mission == "gate":
+             gateMission()
+        else: 
+             print("Invalid mission name")
 
-        # control.move((None,None,-1))
-        # control.moveDelta((0,0,0))
-        # control.rotateEuler((0,0,None))
-        # while True:
-        #     control.rotateEuler((0,0,0))
-        #     control.rotateEuler((0,0,90))
-        #     control.rotateEuler((0,90,90))
-        #     control.rotateEuler((-90,0,0))
-            
-
-        # ----- UNCOMMENT BELOW TO RUN MISSION(S) -----
-        # gateMission()
-        #qualiVisionMission()
-        #buoyMission()  
-        #tricks()  
-        laneMarkerMission()
     except KeyboardInterrupt:
         #ASSUMING ONE CURRENTLY RUNNING STATE MACHINE AT A TIME (NO THREADS)
         if sm is not None: sm.request_preempt()
