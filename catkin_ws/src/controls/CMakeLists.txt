@@ -29,3 +29,25 @@ catkin_package(	CATKIN_DEPENDS
 	tf2_ros
 )
 
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${roscpp_INCLUDE_DIRS}
+  ${tf2_ros_INCLUDE_DIRS}
+  ${tf2_geometry_msgs_INCLUDE_DIRS}
+  ${tf2_INCLUDE_DIRS}
+)
+
+add_executable(quaternion_pid
+  src/quaternion_pid.cpp
+)
+
+
+target_link_libraries(
+  quaternion_pid
+  ${roscpp_LIBRARIES} 
+  ${tf2_ros_LIBRARIES}
+  ${tf2_LIBRARIES}
+  ${tf2_geometry_msgs_LIBRARIES}
+  ${geometry_msgs_LIBRARIES}
+)
