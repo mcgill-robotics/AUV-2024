@@ -1,5 +1,2 @@
 SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="auv_imu"
-SUBSYSTEM=="video4linux", ATTRS{idVendor}=="2b03", ATTRS{idProduct}=="f880", KERNEL=="video*", SYMLINK+="auv_front_cam_left"
-SUBSYSTEM=="video4linux", ATTRS{idVendor}=="2b03", ATTRS{idProduct}=="f881", KERNEL=="video*", SYMLINK+="auv_front_cam_right"
-
-
+SUBSYSTEM=="video4linux", ATTRS{idVendor}=="2b03", ATTRS{idProduct}=="f880", KERNEL=="video*", SYMLINK+="auv_front_cam"

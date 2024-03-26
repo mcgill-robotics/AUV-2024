@@ -87,26 +87,6 @@ RUN git clone --branch release/0.16 --recursive --depth=1 https://github.com/pyt
     rm -rf torchvision \
     && echo "source /AUV-2024/catkin_ws/devel/setup.bash" >> ~/.bashrc 
 
-# ARG UBUNTU_RELEASE_YEAR=20
-# ARG CUDA_MAJOR=11
-# ARG CUDA_MINOR=8.0
-
-    
-# # Setup the ZED SDK
-# RUN apt-get update -y || true ; apt-get install --no-install-recommends lsb-release wget less udev sudo zstd build-essential cmake python3 python3-pip libpng-dev libgomp1 -y ; \
-#     #python3 -m pip install --upgrade pip ; \
-#     python3 -m pip install numpy opencv-python ; \
-#     wget -q -O ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run https://download.stereolabs.com/zedsdk/${ZED_SDK_MAJOR}.${ZED_SDK_MINOR}/cu${CUDA_MAJOR}${CUDA_MINOR%.*}/ubuntu${UBUNTU_RELEASE_YEAR} && \
-#     chmod +x ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run ; ./ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run -- silent skip_tools skip_cuda && \
-#     ln -sf /lib/x86_64-linux-gnu/libusb-1.0.so.0 /usr/lib/x86_64-linux-gnu/libusb-1.0.so && \
-#     rm ZED_SDK_Linux_Ubuntu${UBUNTU_RELEASE_YEAR}.run && \
-#     rm -rf /var/lib/apt/lists/*
-
-# docker buildx build . -t  mcgillrobotics/auv_2024:jetson
-# https://github.com/stereolabs/zed-docker/blob/master/dockerhub.md
-# https://github.com/stereolabs/zed-docker/blob/master/4.X/l4t/devel/Dockerfile
-# https://gitlab.com/nvidia/container-images/l4t-jetpack/-/blob/master/Dockerfile.jetpack?ref_type=heads
-
 ARG L4T_MAJOR_VERSION=35
 ARG L4T_MINOR_VERSION=3
 ARG L4T_PATCH_VERSION=1
@@ -114,7 +94,7 @@ ARG L4T_PATCH_VERSION=1
 ARG ZED_SDK_MAJOR=4
 ARG ZED_SDK_MINOR=0
 
-#This environment variable is needed to use the streaming features on Jetson inside a container
+# this environment variable is needed to use the streaming features on Jetson inside a container
 ENV LOGNAME root
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update || true ; apt-get install --no-install-recommends lsb-release wget less udev zstd sudo apt-transport-https build-essential cmake -y&& \
@@ -125,7 +105,14 @@ RUN apt-get update || true ; apt-get install --no-install-recommends lsb-release
     rm -rf ZED_SDK_Linux.run && \
     rm -rf /var/lib/apt/lists/*
 
-#This symbolic link is needed to use the streaming features on Jetson inside a container
+# this symbolic link is needed to use the streaming features on Jetson inside a container
 RUN ln -sf /usr/lib/aarch64-linux-gnu/tegra/libv4l2.so.0 /usr/lib/aarch64-linux-gnu/libv4l2.so
 
 WORKDIR /usr/local/zed
+
+RUN cd ~/catkin_ws/src && \
+    git clone --recursive https://github.com/stereolabs/zed-ros-wer.git && \
+    cd ../ && \
+    rosdep install --from-paths src --ignore-src -r -y && \
+    catkin_make -DCMAKE_BUILD_TYPE=Release && \
+    source ./devel/setup.bash
